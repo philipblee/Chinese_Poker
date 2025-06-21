@@ -1,0 +1,2235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Poker Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .main-game {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hand-section {
+            margin-bottom: 15px;
+        }
+
+        .hand-label {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .hand-area {
+            min-height: 100px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .hand-area.valid {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .hand-area.invalid {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .hand-area.drop-target {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.2);
+            transform: scale(1.02);
+        }
+
+        .staging-area {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px dashed #ffd700;
+            min-height: 110px;
+        }
+
+        .staging-area:hover {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .player-hand {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .card {
+            width: 65px;
+            height: 90px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            user-select: none;
+            line-height: 1.1;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .card.red {
+            background: linear-gradient(135deg, #fff, #f8f8f8);
+            color: #d32f2f;
+        }
+
+        .card.black {
+            background: linear-gradient(135deg, #fff, #f8f8f8);
+            color: #333;
+        }
+
+        .card.wild {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            border: 2px solid #ff6b6b;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .card.wild:hover {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        .status {
+            text-align: center;
+            font-size: 17px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .player-list {
+            margin-bottom: 20px;
+        }
+
+        .player-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-item.current {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid #ffd700;
+        }
+
+        .player-item.ready {
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid #4ecdc4;
+        }
+
+        .scoring {
+            margin-top: 20px;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hand-strength {
+            font-size: 13px;
+            color: #ccc;
+            margin-top: 3px;
+        }
+
+        .rules {
+            margin-top: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .rules h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .scoring-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            overflow-y: auto;
+        }
+
+        .scoring-content {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            margin: 20px auto;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 1200px;
+            color: white;
+            position: relative;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .close-popup:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .player-hands-section {
+            margin-bottom: 30px;
+        }
+
+        .player-hand-display {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .player-hand-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .hand-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hand-label-popup {
+            width: 100px;
+            font-weight: bold;
+            color: #ffd700;
+            flex-shrink: 0;
+        }
+
+        .hand-cards {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .card-mini {
+            width: 35px;
+            height: 48px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            line-height: 1;
+        }
+
+        .card-mini.red {
+            background: linear-gradient(135deg, #fff, #f8f8f8);
+            color: #d32f2f;
+        }
+
+        .card-mini.black {
+            background: linear-gradient(135deg, #fff, #f8f8f8);
+            color: #333;
+        }
+
+        .card-mini.wild {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            border: 1px solid #ff6b6b;
+        }
+
+        .hand-strength-popup {
+            margin-left: 15px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .round-robin-section {
+            margin-top: 30px;
+        }
+
+        .matchup {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .matchup-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .comparison-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .player-result {
+            flex: 1;
+            text-align: center;
+        }
+
+        .winner {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+
+        .loser {
+            color: #ff6b6b;
+        }
+
+        .tie {
+            color: #ffd700;
+        }
+
+        @media (max-width: 768px) {
+            .scoring-content {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .hand-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .hand-label-popup {
+                width: auto;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🀄 Chinese Poker Online</h1>
+            <p>Arrange your 13 cards into three hands: Back (5 cards) > Middle (5 cards) > Front (3 cards)</p>
+            <div style="font-size: 12px; color: #ccc; margin-top: 5px;">Version 58 - Stable Release</div>
+        </div>
+
+        <div class="game-controls">
+            <button id="newGame" class="btn btn-primary">New Game</button>
+            <button id="addPlayer" class="btn btn-secondary">+Player</button>
+            <button id="resetCards" class="btn btn-secondary">Reset</button>
+            <button id="autoArrange" class="btn btn-secondary">Auto</button>
+            <button id="sortByRank" class="btn btn-secondary">Rank</button>
+            <button id="sortBySuit" class="btn btn-secondary">Suit</button>
+            <button id="submitHand" class="btn btn-primary" disabled>Submit</button>
+        </div>
+
+        <div class="status" id="status">
+            Click "New Game" to start playing!
+        </div>
+
+        <div class="game-area">
+            <div class="main-game">
+                <div class="hand-section">
+                    <div class="hand-label">
+                        Your Cards - Staging Area
+                        <span class="hand-strength" style="font-size: 14px; color: #aaa;">Drag cards here to organize, then place in hands below</span>
+                    </div>
+                    <div class="hand-area staging-area" id="playerHand" data-hand="player"></div>
+                </div>
+
+                <div class="hand-section">
+                    <div class="hand-label">
+                        Back Hand (5 cards) - Strongest
+                        <span class="hand-strength" id="backStrength"></span>
+                    </div>
+                    <div class="hand-area" id="backHand" data-hand="back"></div>
+                </div>
+
+                <div class="hand-section">
+                    <div class="hand-label">
+                        Middle Hand (5 cards) - Medium
+                        <span class="hand-strength" id="middleStrength"></span>
+                    </div>
+                    <div class="hand-area" id="middleHand" data-hand="middle"></div>
+                </div>
+
+                <div class="hand-section">
+                    <div class="hand-label">
+                        Front Hand (3 cards) - Weakest
+                        <span class="hand-strength" id="frontStrength"></span>
+                    </div>
+                    <div class="hand-area" id="frontHand" data-hand="front"></div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <h3>Players</h3>
+                <div class="player-list" id="playerList"></div>
+
+                <div class="scoring" id="scoring" style="display: none;">
+                    <h3>Current Scores</h3>
+                    <div id="scoreList"></div>
+                </div>
+
+                <div class="rules">
+                    <h3>Quick Rules</h3>
+                    <p><strong>Goal:</strong> Arrange 13 cards into 3 hands where Back ≥ Middle ≥ Front in strength.</p>
+                    <p><strong>Hands:</strong> Back (5), Middle (5), Front (3)</p>
+                    <p><strong>Wild Card:</strong> 🃏 WILD can be any card you need!</p>
+                    <p><strong>Scoring:</strong> Compare each hand with opponents. Win points for stronger hands.</p>
+                    <p><strong>Bonus Points:</strong> Front trips (+3). Middle full house (+2), 4K (+8), SF (+10). Back 4K (+4), SF (+5).</p>
+                    <p><strong>Fouling:</strong> If hands are out of order, you lose automatically!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoring Popup -->
+    <div class="scoring-popup" id="scoringPopup">
+        <div class="scoring-content">
+            <button class="close-popup" onclick="game.closeScoringPopup()">×</button>
+            <h2 style="text-align: center; margin-bottom: 30px; color: #ffd700;">🏆 Round Results</h2>
+
+            <div class="player-hands-section">
+                <h3 style="color: #ffd700; margin-bottom: 20px;">All Players' Hands</h3>
+                <div id="allPlayerHands"></div>
+            </div>
+
+            <div class="round-robin-section">
+                <h3 style="color: #ffd700; margin-bottom: 20px;">Round-Robin Scoring</h3>
+                <div id="roundRobinResults"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-primary" onclick="game.closeScoringPopup()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChinesePokerGame {
+            constructor() {
+                this.players = [];
+                this.currentPlayerIndex = 0;
+                this.gameState = 'waiting'; // waiting, playing, scoring
+                this.deck = [];
+                this.playerHands = new Map();
+                this.scores = new Map();
+                this.submittedHands = new Map();
+
+                this.initializeEventListeners();
+                this.updateDisplay();
+            }
+
+            initializeEventListeners() {
+                document.getElementById('newGame').addEventListener('click', () => this.startNewGame());
+                document.getElementById('addPlayer').addEventListener('click', () => this.addPlayer());
+                document.getElementById('resetCards').addEventListener('click', () => this.resetCards());
+                document.getElementById('autoArrange').addEventListener('click', () => this.autoArrangeHand());
+                document.getElementById('sortByRank').addEventListener('click', () => this.sortCardsByRank());
+                document.getElementById('sortBySuit').addEventListener('click', () => this.sortCardsBySuit());
+                document.getElementById('submitHand').addEventListener('click', () => this.submitCurrentHand());
+
+                // Drag and drop
+                this.setupDragAndDrop();
+            }
+
+            setupDragAndDrop() {
+                const handAreas = document.querySelectorAll('.hand-area');
+                const playerHand = document.getElementById('playerHand');
+
+                // Make cards draggable
+                document.addEventListener('dragstart', (e) => {
+                    if (e.target.classList.contains('card')) {
+                        e.target.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', e.target.dataset.card);
+                        e.dataTransfer.setData('source', e.target.parentElement.id);
+                    }
+                });
+
+                document.addEventListener('dragend', (e) => {
+                    if (e.target.classList.contains('card')) {
+                        e.target.classList.remove('dragging');
+                    }
+                });
+
+                // Handle drop zones
+                handAreas.forEach(area => {
+                    area.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        area.classList.add('drop-target');
+                    });
+
+                    area.addEventListener('dragleave', (e) => {
+                        if (!area.contains(e.relatedTarget)) {
+                            area.classList.remove('drop-target');
+                        }
+                    });
+
+                    area.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        area.classList.remove('drop-target');
+
+                        const cardData = e.dataTransfer.getData('text/plain');
+                        const sourceId = e.dataTransfer.getData('source');
+                        const targetHand = area.dataset.hand;
+
+                        this.moveCard(cardData, sourceId, targetHand);
+                    });
+                });
+
+                // Player hand drop zone
+                playerHand.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    playerHand.classList.add('drop-target');
+                });
+
+                playerHand.addEventListener('dragleave', (e) => {
+                    if (!playerHand.contains(e.relatedTarget)) {
+                        playerHand.classList.remove('drop-target');
+                    }
+                });
+
+                playerHand.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    playerHand.classList.remove('drop-target');
+
+                    const cardData = e.dataTransfer.getData('text/plain');
+                    const sourceId = e.dataTransfer.getData('source');
+
+                    this.moveCard(cardData, sourceId, 'player');
+                });
+            }
+
+            createDeck() {
+                const suits = ['♠', '♥', '♦', '♣'];
+                const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+                const deck = [];
+
+                for (let suit of suits) {
+                    for (let rank of ranks) {
+                        deck.push({
+                            suit,
+                            rank,
+                            value: this.getCardValue(rank),
+                            id: `${rank}${suit}`,
+                            isWild: false
+                        });
+                    }
+                }
+
+                // Add one wild card (Joker)
+                deck.push({
+                    suit: '🃏',
+                    rank: 'WILD',
+                    value: 15, // Higher than Ace for sorting purposes
+                    id: 'WILD_JOKER',
+                    isWild: true
+                });
+
+                return this.shuffleDeck(deck);
+            }
+
+            getCardValue(rank) {
+                if (rank === 'A') return 14;
+                if (rank === 'K') return 13;
+                if (rank === 'Q') return 12;
+                if (rank === 'J') return 11;
+                return parseInt(rank);
+            }
+
+            shuffleDeck(deck) {
+                for (let i = deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [deck[i], deck[j]] = [deck[j], deck[i]];
+                }
+                return deck;
+            }
+
+            addPlayer() {
+                const playerName = prompt('Enter player name:') || `Player ${this.players.length + 1}`;
+                this.players.push({
+                    name: playerName,
+                    id: Date.now() + Math.random(),
+                    ready: false
+                });
+                this.scores.set(playerName, 0);
+                this.updateDisplay();
+            }
+
+            startNewGame() {
+                if (this.players.length < 2) {
+                    alert('Need at least 2 players to start!');
+                    return;
+                }
+
+                this.deck = this.createDeck();
+                this.gameState = 'playing';
+                this.currentPlayerIndex = 0;
+                this.submittedHands.clear();
+
+                // Deal cards to all players
+                for (let player of this.players) {
+                    const hand = this.deck.splice(0, 13);
+                    this.playerHands.set(player.name, {
+                        cards: hand,
+                        back: [],
+                        middle: [],
+                        front: []
+                    });
+                    player.ready = false;
+                }
+
+                this.loadCurrentPlayerHand();
+                this.updateDisplay();
+            }
+
+            loadCurrentPlayerHand() {
+                console.log('=== LOADING CURRENT PLAYER HAND ===');
+                console.log('Game state:', this.gameState);
+                console.log('Current player index:', this.currentPlayerIndex);
+                console.log('Total players:', this.players.length);
+
+                if (this.gameState !== 'playing') {
+                    console.log('Not in playing state, exiting');
+                    return;
+                }
+
+                const currentPlayer = this.players[this.currentPlayerIndex];
+                console.log('Current player:', currentPlayer ? currentPlayer.name : 'UNDEFINED');
+
+                const playerData = this.playerHands.get(currentPlayer.name);
+                console.log('Player data found:', !!playerData);
+
+                if (!playerData) {
+                    console.error('No player data found for:', currentPlayer.name);
+                    console.log('Available player hands:', Array.from(this.playerHands.keys()));
+                    return;
+                }
+
+                console.log('Player cards count:', playerData.cards.length);
+                console.log('Back hand count:', playerData.back.length);
+                console.log('Middle hand count:', playerData.middle.length);
+                console.log('Front hand count:', playerData.front.length);
+
+                // Clear current display
+                document.getElementById('playerHand').innerHTML = '';
+                document.getElementById('backHand').innerHTML = '';
+                document.getElementById('middleHand').innerHTML = '';
+                document.getElementById('frontHand').innerHTML = '';
+
+                // Load player's cards
+                this.displayCards(playerData.cards, 'playerHand');
+                this.displayCards(playerData.back, 'backHand');
+                this.displayCards(playerData.middle, 'middleHand');
+                this.displayCards(playerData.front, 'frontHand');
+
+                console.log('Cards displayed, validating hands...');
+                this.validateHands();
+                console.log('=== END LOADING CURRENT PLAYER HAND ===');
+            }
+
+            displayCards(cards, containerId) {
+                const container = document.getElementById(containerId);
+                if (!container || !cards || cards.length === 0) return;
+
+                cards.forEach(card => {
+                    const cardElement = this.createCardElement(card);
+                    container.appendChild(cardElement);
+                });
+            }
+
+            createCardElement(card) {
+                const cardEl = document.createElement('div');
+
+                if (card.isWild) {
+                    cardEl.className = 'card wild';
+                    cardEl.innerHTML = `<div style="font-size: 16px;">WILD</div><div style="font-size: 28px;">🃏</div>`;
+                } else {
+                    cardEl.className = `card ${['♥', '♦'].includes(card.suit) ? 'red' : 'black'}`;
+                    cardEl.innerHTML = `<div style="font-size: 20px;">${card.rank}</div><div style="font-size: 28px;">${card.suit}</div>`;
+                }
+
+                cardEl.draggable = true;
+                cardEl.dataset.card = JSON.stringify(card);
+                return cardEl;
+            }
+
+            moveCard(cardData, sourceId, targetHand) {
+                const card = JSON.parse(cardData);
+                const currentPlayer = this.players[this.currentPlayerIndex];
+                const playerData = this.playerHands.get(currentPlayer.name);
+
+                if (!playerData) return;
+
+                // Remove card from source
+                const sourceKey = this.getHandKey(sourceId);
+                const sourceArray = sourceKey === 'cards' ? playerData.cards : playerData[sourceKey];
+                const cardIndex = sourceArray.findIndex(c => c.id === card.id);
+
+                if (cardIndex === -1) return;
+
+                // Check hand size limits BEFORE moving
+                const targetKey = this.getHandKey(targetHand);
+                const targetArray = targetKey === 'cards' ? playerData.cards : playerData[targetKey];
+
+                if (targetKey === 'front' && targetArray.length >= 3) {
+                    alert('Front hand can only have 3 cards!');
+                    return; // Don't move the card
+                }
+
+                if ((targetKey === 'back' || targetKey === 'middle') && targetArray.length >= 5) {
+                    alert(`${targetKey === 'back' ? 'Back' : 'Middle'} hand can only have 5 cards!`);
+                    return; // Don't move the card
+                }
+
+                // Now safe to move the card
+                sourceArray.splice(cardIndex, 1);
+                targetArray.push(card);
+
+                this.loadCurrentPlayerHand();
+            }
+
+            getHandKey(elementId) {
+                switch (elementId) {
+                    case 'playerHand': return 'cards';
+                    case 'backHand': case 'back': return 'back';
+                    case 'middleHand': case 'middle': return 'middle';
+                    case 'frontHand': case 'front': return 'front';
+                    default: return 'cards';
+                }
+            }
+
+            validateHands() {
+                const currentPlayer = this.players[this.currentPlayerIndex];
+                const playerData = this.playerHands.get(currentPlayer.name);
+
+                if (!playerData) return;
+
+                const backHand = document.getElementById('backHand');
+                const middleHand = document.getElementById('middleHand');
+                const frontHand = document.getElementById('frontHand');
+                const submitBtn = document.getElementById('submitHand');
+                const statusDiv = document.getElementById('status');
+
+                // Reset classes
+                [backHand, middleHand, frontHand].forEach(hand => {
+                    hand.classList.remove('valid', 'invalid');
+                });
+
+                // Check card counts and total
+                const backCount = playerData.back.length;
+                const middleCount = playerData.middle.length;
+                const frontCount = playerData.front.length;
+                const totalPlaced = backCount + middleCount + frontCount;
+
+                // Validate hand sizes
+                const isValidCounts = backCount <= 5 && middleCount <= 5 && frontCount <= 3;
+                const isComplete = totalPlaced === 13 && backCount === 5 && middleCount === 5 && frontCount === 3;
+
+                if (!isValidCounts) {
+                    // Mark oversized hands as invalid
+                    if (backCount > 5) backHand.classList.add('invalid');
+                    if (middleCount > 5) middleHand.classList.add('invalid');
+                    if (frontCount > 3) frontHand.classList.add('invalid');
+
+                    submitBtn.disabled = true;
+                    document.getElementById('backStrength').textContent = `${backCount}/5 cards ${backCount > 5 ? '(TOO MANY!)' : ''}`;
+                    document.getElementById('middleStrength').textContent = `${middleCount}/5 cards ${middleCount > 5 ? '(TOO MANY!)' : ''}`;
+                    document.getElementById('frontStrength').textContent = `${frontCount}/3 cards ${frontCount > 3 ? '(TOO MANY!)' : ''}`;
+                    return;
+                }
+
+                if (isComplete) {
+                    // Evaluate hand strengths
+                    const backStrength = this.evaluateHand(playerData.back);
+                    const middleStrength = this.evaluateHand(playerData.middle);
+                    const frontStrength = this.evaluateThreeCardHand(playerData.front);
+
+                    // Check if hands are in proper order
+                    const backTuple = backStrength.hand_rank;
+                    const middleTuple = middleStrength.hand_rank;
+                    const frontTuple = frontStrength.hand_rank;
+
+                    const isValidOrder = this.compareTuples(backTuple, middleTuple) >= 0 &&
+                                       this.compareTuples(middleTuple, frontTuple) >= 0;
+
+                    // Display hand strengths
+                    document.getElementById('backStrength').textContent = `${this.getHandName(backStrength)} (${backStrength.hand_rank.join(', ')})`;
+                    document.getElementById('middleStrength').textContent = `${this.getHandName(middleStrength)} (${middleStrength.hand_rank.join(', ')})`;
+                    document.getElementById('frontStrength').textContent = `${this.getThreeCardHandName(frontStrength)} (${frontStrength.hand_rank.join(', ')})`;
+
+                    if (isValidOrder) {
+                        // Setup is completely valid
+                        backHand.classList.add('valid');
+                        middleHand.classList.add('valid');
+                        frontHand.classList.add('valid');
+                        submitBtn.disabled = false;
+
+                        // Update status to show setup is valid
+                        const currentPlayer = this.players[this.currentPlayerIndex];
+                        const readyCount = this.players.filter(p => p.ready).length;
+                        statusDiv.innerHTML = `${currentPlayer.name}'s turn - <span style="color: #4ecdc4; font-weight: bold;">✓ SETUP VALID</span> - Ready to submit! (${readyCount}/${this.players.length} players ready)`;
+                    } else {
+                        // Hands are out of order
+                        backHand.classList.add('invalid');
+                        middleHand.classList.add('invalid');
+                        frontHand.classList.add('invalid');
+                        submitBtn.disabled = true;
+
+                        // Update status to show setup is invalid
+                        const currentPlayer = this.players[this.currentPlayerIndex];
+                        const readyCount = this.players.filter(p => p.ready).length;
+                        statusDiv.innerHTML = `${currentPlayer.name}'s turn - <span style="color: #ff6b6b; font-weight: bold;">✗ INVALID ORDER</span> - Back ≥ Middle ≥ Front required! (${readyCount}/${this.players.length} players ready)`;
+                    }
+                } else {
+                    submitBtn.disabled = true;
+                    document.getElementById('backStrength').textContent = `${backCount}/5 cards`;
+                    document.getElementById('middleStrength').textContent = `${middleCount}/5 cards`;
+                    document.getElementById('frontStrength').textContent = `${frontCount}/3 cards`;
+
+                    // Update status to show incomplete setup
+                    const currentPlayer = this.players[this.currentPlayerIndex];
+                    const readyCount = this.players.filter(p => p.ready).length;
+                    statusDiv.innerHTML = `${currentPlayer.name}'s turn - <span style="color: #ffd700; font-weight: bold;">⚠ INCOMPLETE</span> - Arrange all 13 cards (${totalPlaced}/13 placed) (${readyCount}/${this.players.length} players ready)`;
+                }
+            }
+
+            evaluateHand(cards) {
+                if (cards.length !== 5) return { rank: 0, hand_rank: [0, 0], name: 'Invalid' };
+
+                // Handle wild cards - find the best possible hand
+                const wildCards = cards.filter(c => c.isWild);
+                const normalCards = cards.filter(c => !c.isWild);
+
+                if (wildCards.length > 0) {
+                    return this.evaluateHandWithWilds(normalCards, wildCards.length);
+                }
+
+                // Normal evaluation for hands without wilds
+                const sortedCards = [...cards].sort((a, b) => b.value - a.value);
+                const suits = cards.map(c => c.suit);
+                const values = sortedCards.map(c => c.value);
+
+                const isFlush = suits.every(suit => suit === suits[0]);
+                const isStraight = this.isStraight(values);
+
+                // Count values and organize by frequency
+                const valueCounts = {};
+                values.forEach(val => valueCounts[val] = (valueCounts[val] || 0) + 1);
+
+                // Group values by count frequency
+                const valuesByCount = {};
+                for (const [value, count] of Object.entries(valueCounts)) {
+                    if (!valuesByCount[count]) valuesByCount[count] = [];
+                    valuesByCount[count].push(parseInt(value));
+                }
+
+                // Sort each group by descending value
+                for (const count in valuesByCount) {
+                    valuesByCount[count].sort((a, b) => b - a);
+                }
+
+                const counts = Object.keys(valuesByCount).map(Number).sort((a, b) => b - a);
+
+                if (isStraight && isFlush) {
+                    return { rank: 8, hand_rank: [9, values[0]], name: 'Straight Flush' };
+                }
+
+                if (counts[0] === 4) {
+                    // Four of a Kind: [8, quad_rank, kicker]
+                    const quadRank = valuesByCount[4][0];
+                    const kicker = valuesByCount[1][0];
+                    return { rank: 7, hand_rank: [8, quadRank, kicker], name: 'Four of a Kind' };
+                }
+
+                if (counts[0] === 3 && counts[1] === 2) {
+                    // Full House: [7, trips_rank, pair_rank]
+                    const tripsRank = valuesByCount[3][0];
+                    const pairRank = valuesByCount[2][0];
+                    return { rank: 6, hand_rank: [7, tripsRank, pairRank], name: 'Full House' };
+                }
+
+                if (isFlush) {
+                    // Flush: [6, high, second, third, fourth, fifth]
+                    return { rank: 5, hand_rank: [6, ...values], name: 'Flush' };
+                }
+
+                if (isStraight) {
+                    return { rank: 4, hand_rank: [5, values[0]], name: 'Straight' };
+                }
+
+                if (counts[0] === 3) {
+                    // Three of a Kind: [4, trips_rank, kicker1, kicker2]
+                    const tripsRank = valuesByCount[3][0];
+                    const kickers = valuesByCount[1].slice(0, 2);
+                    return { rank: 3, hand_rank: [4, tripsRank, ...kickers], name: 'Three of a Kind' };
+                }
+
+                if (counts[0] === 2) {
+                    // Check if we have two pairs
+                    if (valuesByCount[2] && valuesByCount[2].length >= 2) {
+                        // Two Pair: [3, higher_pair, lower_pair, kicker]
+                        const pairs = valuesByCount[2];
+                        const higherPair = Math.max(...pairs);
+                        const lowerPair = Math.min(...pairs);
+                        const kicker = valuesByCount[1] ? valuesByCount[1][0] : 0;
+                        return { rank: 2, hand_rank: [3, higherPair, lowerPair, kicker], name: 'Two Pair' };
+                    } else {
+                        // Single Pair: [2, pair_rank, kicker1, kicker2, kicker3]
+                        const pairRank = valuesByCount[2][0];
+                        const kickers = valuesByCount[1] ? valuesByCount[1].slice(0, 3) : [];
+                        return { rank: 1, hand_rank: [2, pairRank, ...kickers], name: 'Pair' };
+                    }
+                }
+
+                // High Card: [1, high, second, third, fourth, fifth]
+                return { rank: 0, hand_rank: [1, ...values], name: 'High Card' };
+            }
+
+            isStraight(values) {
+                for (let i = 0; i < values.length - 1; i++) {
+                    if (values[i] - values[i + 1] !== 1) {
+                        // Check for A-2-3-4-5 straight
+                        if (values[0] === 14 && values[1] === 5 && values[2] === 4 && values[3] === 3 && values[4] === 2) {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            isStraightWithHigh(values) {
+                // Check for regular straight
+                for (let i = 0; i < values.length - 1; i++) {
+                    if (values[i] - values[i + 1] !== 1) {
+                        // Check for A-2-3-4-5 straight (wheel)
+                        if (values[0] === 14 && values[1] === 5 && values[2] === 4 &&
+                            values[3] === 3 && values[4] === 2) {
+                            return { isStraight: true, high: 5 }; // Wheel straight high = 5
+                        }
+                        return { isStraight: false, high: 0 };
+                    }
+                }
+
+                // Regular straight - high card is the highest value
+                return { isStraight: true, high: values[0] };
+            }
+
+            evaluateHandWithWilds(normalCards, wildCount) {
+                // With wilds, find the BEST possible hand by trying all possibilities
+                const values = normalCards.map(c => c.value).sort((a, b) => b - a);
+                const suits = normalCards.map(c => c.suit);
+
+                // Try to make the best possible hand in order: Straight Flush > Four of a Kind > Full House > Flush > Straight > etc.
+
+                // 1. Try for Straight Flush
+                const straightFlush = this.tryForStraightFlush(normalCards, wildCount);
+                if (straightFlush) return straightFlush;
+
+                // 2. Try for Four of a Kind
+                const fourOfAKind = this.tryForFourOfAKind(normalCards, wildCount);
+                if (fourOfAKind) return fourOfAKind;
+
+                // 3. Try for Full House
+                const fullHouse = this.tryForFullHouse(normalCards, wildCount);
+                if (fullHouse) return fullHouse;
+
+                // 4. Try for Flush
+                const flush = this.tryForFlush(normalCards, wildCount);
+                if (flush) return flush;
+
+                // 5. Try for Straight
+                const straight = this.tryForStraight(normalCards, wildCount);
+                if (straight) return straight;
+
+                // 6. Try for Three of a Kind
+                const threeOfAKind = this.tryForThreeOfAKind(normalCards, wildCount);
+                if (threeOfAKind) return threeOfAKind;
+
+                // 7. Try for Two Pair
+                const twoPair = this.tryForTwoPair(normalCards, wildCount);
+                if (twoPair) return twoPair;
+
+                // 8. Try for Pair
+                const pair = this.tryForPair(normalCards, wildCount);
+                if (pair) return pair;
+
+                // 9. High card
+                const allValues = [...values];
+                while (allValues.length < 5) allValues.push(14 - allValues.length); // Fill with high cards
+                return { rank: 0, hand_rank: [1, ...allValues.slice(0, 5)], name: 'High Card (Wild)' };
+            }
+
+            tryForStraightFlush(normalCards, wildCount) {
+                // Try to make a straight flush - both straight and flush
+                const straight = this.tryForStraight(normalCards, wildCount);
+                const flush = this.tryForFlush(normalCards, wildCount);
+
+                if (straight && flush) {
+                    // Check if we can make both with the same wild card usage
+                    // This is complex - for now, just check if we have 4+ cards of same suit
+                    const suitCounts = {};
+                    normalCards.forEach(c => suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1);
+                    const maxSuitCount = Math.max(...Object.values(suitCounts));
+
+                    if (maxSuitCount + wildCount >= 5) {
+                        return { rank: 8, hand_rank: [9, straight.hand_rank[1]], name: 'Straight Flush (Wild)' };
+                    }
+                }
+                return null;
+            }
+
+            tryForFourOfAKind(normalCards, wildCount) {
+                const valueCounts = {};
+                normalCards.forEach(c => valueCounts[c.value] = (valueCounts[c.value] || 0) + 1);
+
+                for (const [value, count] of Object.entries(valueCounts)) {
+                    if (count + wildCount >= 4) {
+                        const quadRank = parseInt(value);
+                        const kicker = normalCards.find(c => c.value !== quadRank)?.value || 13;
+                        return { rank: 7, hand_rank: [8, quadRank, kicker], name: 'Four of a Kind (Wild)' };
+                    }
+                }
+                return null;
+            }
+
+            tryForFullHouse(normalCards, wildCount) {
+                const valueCounts = {};
+                normalCards.forEach(c => valueCounts[c.value] = (valueCounts[c.value] || 0) + 1);
+                const pairs = Object.entries(valueCounts).filter(([v, c]) => c >= 2);
+
+                if (pairs.length >= 2 && wildCount >= 1) {
+                    const higherPair = Math.max(...pairs.map(([v, c]) => parseInt(v)));
+                    const lowerPair = Math.min(...pairs.map(([v, c]) => parseInt(v)));
+                    return { rank: 6, hand_rank: [7, higherPair, lowerPair], name: 'Full House (Wild)' };
+                }
+
+                if (pairs.length >= 1 && wildCount >= 2) {
+                    const pairRank = parseInt(pairs[0][0]);
+                    const tripRank = pairRank;
+                    const remaining = normalCards.filter(c => c.value !== pairRank);
+                    const secondPairRank = remaining[0]?.value || 13;
+                    return { rank: 6, hand_rank: [7, tripRank, secondPairRank], name: 'Full House (Wild)' };
+                }
+
+                return null;
+            }
+
+            tryForFlush(normalCards, wildCount) {
+                const suitCounts = {};
+                normalCards.forEach(c => suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1);
+
+                for (const [suit, count] of Object.entries(suitCounts)) {
+                    if (count + wildCount >= 5) {
+                        const flushCards = normalCards.filter(c => c.suit === suit);
+                        const values = flushCards.map(c => c.value).sort((a, b) => b - a);
+                        while (values.length < 5) values.push(14 - values.length);
+                        return { rank: 5, hand_rank: [6, ...values.slice(0, 5)], name: 'Flush (Wild)' };
+                    }
+                }
+                return null;
+            }
+
+            tryForStraight(normalCards, wildCount) {
+                const values = [...new Set(normalCards.map(c => c.value))].sort((a, b) => b - a);
+
+                // Try all possible straights from A-K-Q-J-10 down to 5-4-3-2-A
+                const possibleStraights = [
+                    [14, 13, 12, 11, 10], // A-K-Q-J-10
+                    [13, 12, 11, 10, 9],  // K-Q-J-10-9
+                    [12, 11, 10, 9, 8],   // Q-J-10-9-8
+                    [11, 10, 9, 8, 7],    // J-10-9-8-7
+                    [10, 9, 8, 7, 6],     // 10-9-8-7-6
+                    [9, 8, 7, 6, 5],      // 9-8-7-6-5
+                    [8, 7, 6, 5, 4],      // 8-7-6-5-4
+                    [7, 6, 5, 4, 3],      // 7-6-5-4-3
+                    [6, 5, 4, 3, 2],      // 6-5-4-3-2
+                    [14, 5, 4, 3, 2]      // A-5-4-3-2 (wheel)
+                ];
+
+                for (const straight of possibleStraights) {
+                    const needed = straight.filter(v => !values.includes(v)).length;
+                    if (needed <= wildCount) {
+                        return { rank: 4, hand_rank: [5, straight[0]], name: 'Straight (Wild)' };
+                    }
+                }
+                return null;
+            }
+
+            tryForThreeOfAKind(normalCards, wildCount) {
+                const valueCounts = {};
+                normalCards.forEach(c => valueCounts[c.value] = (valueCounts[c.value] || 0) + 1);
+
+                for (const [value, count] of Object.entries(valueCounts)) {
+                    if (count + wildCount >= 3) {
+                        const tripsRank = parseInt(value);
+                        const kickers = normalCards.filter(c => c.value !== tripsRank).map(c => c.value).sort((a, b) => b - a);
+                        while (kickers.length < 2) kickers.push(13 - kickers.length);
+                        return { rank: 3, hand_rank: [4, tripsRank, ...kickers.slice(0, 2)], name: 'Three of a Kind (Wild)' };
+                    }
+                }
+                return null;
+            }
+
+            tryForTwoPair(normalCards, wildCount) {
+                const valueCounts = {};
+                normalCards.forEach(c => valueCounts[c.value] = (valueCounts[c.value] || 0) + 1);
+                const pairs = Object.entries(valueCounts).filter(([v, c]) => c >= 2);
+
+                if (pairs.length >= 2) {
+                    const pairValues = pairs.map(([v, c]) => parseInt(v)).sort((a, b) => b - a);
+                    const kicker = normalCards.find(c => !pairValues.includes(c.value))?.value || 13;
+                    return { rank: 2, hand_rank: [3, pairValues[0], pairValues[1], kicker], name: 'Two Pair (Wild)' };
+                }
+
+                if (pairs.length >= 1 && wildCount >= 2) {
+                    const pairRank = parseInt(pairs[0][0]);
+                    const remaining = normalCards.filter(c => c.value !== pairRank);
+                    const secondPairRank = remaining[0]?.value || 13;
+                    const kicker = remaining[1]?.value || 12;
+                    return { rank: 2, hand_rank: [3, Math.max(pairRank, secondPairRank), Math.min(pairRank, secondPairRank), kicker], name: 'Two Pair (Wild)' };
+                }
+
+                return null;
+            }
+
+            tryForPair(normalCards, wildCount) {
+                if (wildCount >= 1) {
+                    const highCard = Math.max(...normalCards.map(c => c.value));
+                    const kickers = normalCards.filter(c => c.value !== highCard).map(c => c.value).sort((a, b) => b - a);
+                    while (kickers.length < 3) kickers.push(13 - kickers.length);
+                    return { rank: 1, hand_rank: [2, highCard, ...kickers.slice(0, 3)], name: 'Pair (Wild)' };
+                }
+                return null;
+            }
+
+            evaluateThreeCardHand(cards) {
+                if (cards.length !== 3) return { rank: 0, hand_rank: [0, 0], name: 'Invalid' };
+
+                // Handle wild cards in 3-card hands
+                const wildCards = cards.filter(c => c.isWild);
+                const normalCards = cards.filter(c => !c.isWild);
+
+                if (wildCards.length > 0) {
+                    return this.evaluateThreeCardHandWithWilds(normalCards, wildCards.length);
+                }
+
+                const sortedCards = [...cards].sort((a, b) => b.value - a.value);
+                const values = sortedCards.map(c => c.value);
+
+                const valueCounts = {};
+                values.forEach(val => valueCounts[val] = (valueCounts[val] || 0) + 1);
+
+                // Group values by count frequency
+                const valuesByCount = {};
+                for (const [value, count] of Object.entries(valueCounts)) {
+                    if (!valuesByCount[count]) valuesByCount[count] = [];
+                    valuesByCount[count].push(parseInt(value));
+                }
+
+                // Sort each group by descending value
+                for (const count in valuesByCount) {
+                    valuesByCount[count].sort((a, b) => b - a);
+                }
+
+                const counts = Object.keys(valuesByCount).map(Number).sort((a, b) => b - a);
+
+                if (counts[0] === 3) {
+                    // Three of a Kind: [4, trips_rank]
+                    const tripsRank = valuesByCount[3][0];
+                    return { rank: 3, hand_rank: [4, tripsRank], name: 'Three of a Kind' };
+                }
+
+                if (counts[0] === 2) {
+                    // Pair: [2, pair_rank, kicker]
+                    const pairRank = valuesByCount[2][0];
+                    const kicker = valuesByCount[1][0];
+                    return { rank: 1, hand_rank: [2, pairRank, kicker], name: 'Pair' };
+                }
+
+                // High Card: [1, high, second, third]
+                return { rank: 0, hand_rank: [1, ...values], name: 'High Card' };
+            }
+
+            evaluateThreeCardHandWithWilds(normalCards, wildCount) {
+                const values = normalCards.map(c => c.value).sort((a, b) => b - a);
+                const valueCounts = {};
+                values.forEach(val => valueCounts[val] = (valueCounts[val] || 0) + 1);
+
+                // Group values by count frequency
+                const valuesByCount = {};
+                for (const [value, count] of Object.entries(valueCounts)) {
+                    if (!valuesByCount[count]) valuesByCount[count] = [];
+                    valuesByCount[count].push(parseInt(value));
+                }
+
+                // Sort each group by descending value
+                for (const count in valuesByCount) {
+                    valuesByCount[count].sort((a, b) => b - a);
+                }
+
+                const counts = Object.keys(valuesByCount).map(Number).sort((a, b) => b - a);
+                const highCard = values[0] || 14;
+
+                if (wildCount >= 2) {
+                    // Three of a kind with 2+ wilds
+                    const tripsRank = highCard;
+                    return { rank: 3, hand_rank: [4, tripsRank], name: 'Three of a Kind (Wild)' };
+                }
+
+                if (wildCount === 1) {
+                    if (counts[0] >= 2) {
+                        // Three of a kind from existing pair + 1 wild
+                        const tripsRank = valuesByCount[counts[0]][0];
+                        return { rank: 3, hand_rank: [4, tripsRank], name: 'Three of a Kind (Wild)' };
+                    }
+                    // Pair from highest single + 1 wild
+                    const pairRank = highCard;
+                    const kicker = values.find(v => v !== pairRank) || 13;
+                    return { rank: 1, hand_rank: [2, pairRank, kicker], name: 'Pair (Wild)' };
+                }
+
+                // High card with all remaining values
+                const allValues = [...values];
+                while (allValues.length < 3) allValues.push(13 - allValues.length);
+                return { rank: 0, hand_rank: [1, ...allValues.slice(0, 3)], name: 'High Card' };
+            }
+
+            convertThreeCardRank(threeCardRank) {
+                // Convert 3-card hand ranks to 5-card scale for comparison
+                // In Chinese Poker, 3-card hands use different scale:
+                // 3-card: 3=trips, 1=pair, 0=high card
+                // 5-card: 3=trips, 1=pair, 0=high card (same scale!)
+                return threeCardRank; // Direct conversion since scales match
+            }
+
+            getHandName(evaluation) {
+                return evaluation.name;
+            }
+
+            getThreeCardHandName(evaluation) {
+                return evaluation.name;
+            }
+
+            resetCards() {
+                const currentPlayer = this.players[this.currentPlayerIndex];
+                const playerData = this.playerHands.get(currentPlayer.name);
+
+                if (!playerData) return;
+
+                // Collect all cards from all hands
+                const allCards = [...playerData.cards, ...playerData.back, ...playerData.middle, ...playerData.front];
+
+                // Reset all hands and put all cards back in staging area
+                playerData.cards = allCards;
+                playerData.back = [];
+                playerData.middle = [];
+                playerData.front = [];
+
+                this.loadCurrentPlayerHand();
+            }
+
+            autoArrangeHand() {
+                console.log('=== AUTO-ARRANGE V58 FIXED VERSION ===');
+                console.log('Ensuring all 13 cards are preserved during arrangement!');
+
+                const currentPlayer = this.players[this.currentPlayerIndex];
+                const playerData = this.playerHands.get(currentPlayer.name);
+
+                if (!playerData) {
+                    console.error('No player data found');
+                    return;
+                }
+
+                // Get all cards and verify count
+                const allCards = [...playerData.cards, ...playerData.back, ...playerData.middle, ...playerData.front];
+                console.log('🔍 Total cards before arrangement:', allCards.length);
+                console.log('📋 Card IDs:', allCards.map(c => c.id));
+
+                if (allCards.length !== 13) {
+                    console.error('❌ CARD COUNT ERROR: Expected 13 cards, found', allCards.length);
+                    alert(`Card count error: Found ${allCards.length} cards instead of 13!`);
+                    return;
+                }
+
+                // Simple, safe arrangement that guarantees no card loss
+                const sortedCards = [...allCards].sort((a, b) => b.value - a.value);
+
+                // Safe distribution: highest 5 to back, next 5 to middle, lowest 3 to front
+                const backHand = sortedCards.slice(0, 5);
+                const middleHand = sortedCards.slice(5, 10);
+                const frontHand = sortedCards.slice(10, 13);
+
+                console.log('✅ Safe distribution completed');
+                console.log('🏆 Back hand:', backHand.length, 'cards');
+                console.log('🥈 Middle hand:', middleHand.length, 'cards');
+                console.log('🥉 Front hand:', frontHand.length, 'cards');
+                console.log('📊 Total distributed:', backHand.length + middleHand.length + frontHand.length);
+
+                // Apply the arrangement
+                playerData.cards = [];
+                playerData.back = backHand;
+                playerData.middle = middleHand;
+                playerData.front = frontHand;
+
+                console.log('🎯 Final verification - Back:', playerData.back.length, 'Middle:', playerData.middle.length, 'Front:', playerData.front.length);
+
+                this.loadCurrentPlayerHand();
+            }
+
+            sortCardsByRank() {
+                const currentPlayer = this.players[this.currentPlayerIndex];
+                const playerData = this.playerHands.get(currentPlayer.name);
+
+                if (!playerData) return;
+
+                // Sort cards in staging area by rank (high to low)
+                playerData.cards.sort((a, b) => {
+                    if (a.value !== b.value) {
+                        return b.value - a.value; // High to low
+                    }
+                    // If same rank, sort by suit order (spades, hearts, diamonds, clubs)
+                    const suitOrder = { '♠': 4, '♥': 3, '♦': 2, '♣': 1 };
+                    return suitOrder[b.suit] - suitOrder[a.suit];
+                });
+
+                this.loadCurrentPlayerHand();
+            }
+
+            sortCardsBySuit() {
+                const currentPlayer = this.players[this.currentPlayerIndex];
+                const playerData = this.playerHands.get(currentPlayer.name);
+
+                if (!playerData) return;
+
+                // Sort cards in staging area by suit, then by rank within each suit
+                playerData.cards.sort((a, b) => {
+                    // First sort by suit (spades, hearts, diamonds, clubs)
+                    const suitOrder = { '♠': 4, '♥': 3, '♦': 2, '♣': 1 };
+                    if (a.suit !== b.suit) {
+                        return suitOrder[b.suit] - suitOrder[a.suit];
+                    }
+                    // Within same suit, sort by rank (high to low)
+                    return b.value - a.value;
+                });
+
+                this.loadCurrentPlayerHand();
+            }
+
+            findBestValidArrangement(cards) {
+                if (cards.length !== 13) {
+                    return {
+                        back: [],
+                        middle: [],
+                        front: [],
+                        cards: cards
+                    };
+                }
+
+                // Sort cards by value (highest to lowest)
+                const sortedCards = [...cards].sort((a, b) => b.value - a.value);
+
+                // Smart arrangement that considers poker hand strength
+                const arrangement = this.createValidArrangement(sortedCards);
+
+                return arrangement;
+            }
+
+            createValidArrangement(sortedCards) {
+                // Count card values and suits
+                const valueCounts = {};
+                const suitCounts = {};
+
+                sortedCards.forEach(card => {
+                    valueCounts[card.value] = (valueCounts[card.value] || []).concat(card);
+                    suitCounts[card.suit] = (suitCounts[card.suit] || []).concat(card);
+                });
+
+                // Find special hands
+                const flushCards = this.findFlushCards(suitCounts);
+                const straightCards = this.findStraightCards(sortedCards);
+                const straightFlushCards = this.findStraightFlush(sortedCards);
+
+                // Separate cards by count (quads, trips, pairs, singles)
+                const quads = [];
+                const trips = [];
+                const pairs = [];
+                const singles = [];
+
+                Object.values(valueCounts).forEach(group => {
+                    if (group.length === 4) quads.push(group);
+                    else if (group.length === 3) trips.push(group);
+                    else if (group.length === 2) pairs.push(group);
+                    else singles.push(...group);
+                });
+
+                // Sort groups by value (high to low)
+                quads.sort((a, b) => b[0].value - a[0].value);
+                trips.sort((a, b) => b[0].value - a[0].value);
+                pairs.sort((a, b) => b[0].value - a[0].value);
+                singles.sort((a, b) => b.value - a.value);
+
+                let backHand = [];
+
+                // Build strongest possible back hand
+                if (straightFlushCards.length >= 5) {
+                    backHand = straightFlushCards.slice(0, 5);
+                } else if (quads.length > 0) {
+                    backHand.push(...quads[0]);
+                    backHand.push(singles[0] || pairs[0]?.[0] || trips[0]?.[0]);
+                } else if (trips.length > 0 && pairs.length > 0) {
+                    backHand.push(...trips[0]);
+                    backHand.push(...pairs[0]);
+                } else if (flushCards.length >= 5) {
+                    backHand = flushCards.slice(0, 5);
+                } else if (straightCards.length >= 5) {
+                    backHand = straightCards.slice(0, 5);
+                } else if (trips.length > 0) {
+                    backHand.push(...trips[0]);
+                    backHand.push(...singles.slice(0, 2));
+                } else if (pairs.length >= 2) {
+                    backHand.push(...pairs[0]);
+                    backHand.push(...pairs[1]);
+                    backHand.push(singles[0]);
+                } else if (pairs.length > 0) {
+                    backHand.push(...pairs[0]);
+                    backHand.push(...singles.slice(0, 3));
+                } else {
+                    backHand = sortedCards.slice(0, 5);
+                }
+
+                // Get remaining cards after back hand
+                const remaining = this.removeUsedCards(sortedCards, backHand);
+
+                // Smart distribution for middle and front to ensure Middle > Front
+                const { middleHand, frontHand } = this.distributeRemainingCards(remaining);
+
+                return {
+                    back: backHand,
+                    middle: middleHand,
+                    front: frontHand,
+                    cards: []
+                };
+            }
+
+            distributeRemainingCards(remaining) {
+                console.log('Distributing remaining cards:', remaining.length);
+                console.log('Remaining cards:', remaining.map(c => c.id));
+
+                if (remaining.length !== 8) {
+                    console.error('DISTRIBUTION ERROR: Expected 8 remaining cards, got', remaining.length);
+                    // Fallback: just split them as evenly as possible
+                    return {
+                        middleHand: remaining.slice(0, Math.min(5, remaining.length)),
+                        frontHand: remaining.slice(5, 8)
+                    };
+                }
+
+                // Find pairs in remaining cards
+                const remainingCounts = {};
+                remaining.forEach(card => {
+                    remainingCounts[card.value] = (remainingCounts[card.value] || []).concat(card);
+                });
+
+                const remainingPairs = [];
+                const remainingSingles = [];
+
+                Object.values(remainingCounts).forEach(group => {
+                    if (group.length >= 2) remainingPairs.push(group);
+                    else remainingSingles.push(...group);
+                });
+
+                remainingPairs.sort((a, b) => b[0].value - a[0].value);
+                remainingSingles.sort((a, b) => b.value - a.value);
+
+                let middleHand = [];
+                let frontHand = [];
+
+                // Strategy: Ensure middle hand is stronger than front
+                if (remainingPairs.length >= 2) {
+                    // Put better pair in middle, weaker pair in front
+                    middleHand.push(...remainingPairs[0]); // Better pair in middle
+                    middleHand.push(...remainingSingles.slice(0, 3)); // Fill middle with singles
+
+                    frontHand.push(...remainingPairs[1].slice(0, 2)); // Weaker pair in front
+                    if (remainingSingles[3]) {
+                        frontHand.push(remainingSingles[3]); // One single in front
+                    } else if (remainingSingles[0]) {
+                        frontHand.push(remainingSingles[0]); // Backup single
+                    }
+                } else if (remainingPairs.length === 1) {
+                    // Put pair in middle, singles in front
+                    middleHand.push(...remainingPairs[0]); // Pair in middle
+                    middleHand.push(...remainingSingles.slice(0, 3)); // 3 singles in middle
+
+                    frontHand = remainingSingles.slice(3, 6); // 3 singles in front
+                } else {
+                    // All singles - put higher ones in middle
+                    middleHand = remainingSingles.slice(0, 5); // 5 highest in middle
+                    frontHand = remainingSingles.slice(5, 8); // 3 lowest in front
+                }
+
+                // Ensure exactly 5 cards in middle and 3 in front
+                while (middleHand.length < 5 && frontHand.length > 3) {
+                    middleHand.push(frontHand.shift());
+                }
+                while (frontHand.length < 3 && middleHand.length > 5) {
+                    frontHand.push(middleHand.pop());
+                }
+
+                console.log('Distribution result - Middle:', middleHand.length, 'Front:', frontHand.length);
+                console.log('Middle cards:', middleHand.map(c => c.id));
+                console.log('Front cards:', frontHand.map(c => c.id));
+
+                return { middleHand, frontHand };
+            }
+
+            findFlushCards(suitCounts) {
+                // Find suits with 5+ cards
+                for (const suit in suitCounts) {
+                    if (suitCounts[suit].length >= 5) {
+                        return suitCounts[suit].sort((a, b) => b.value - a.value);
+                    }
+                }
+                return [];
+            }
+
+            findStraightCards(sortedCards) {
+                // Check for 5+ consecutive cards
+                const values = [...new Set(sortedCards.map(c => c.value))].sort((a, b) => b - a);
+
+                for (let i = 0; i <= values.length - 5; i++) {
+                    let consecutive = 1;
+                    for (let j = i + 1; j < values.length && consecutive < 5; j++) {
+                        if (values[j] === values[j-1] - 1) {
+                            consecutive++;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (consecutive >= 5) {
+                        // Found a straight, get the actual cards
+                        const straightValues = values.slice(i, i + 5);
+                        const straightCards = [];
+
+                        straightValues.forEach(value => {
+                            const card = sortedCards.find(c => c.value === value);
+                            if (card) straightCards.push(card);
+                        });
+
+                        return straightCards;
+                    }
+                }
+
+                // Check for A-2-3-4-5 straight (wheel)
+                if (values.includes(14) && values.includes(5) && values.includes(4) &&
+                    values.includes(3) && values.includes(2)) {
+                    const wheelCards = [];
+                    [14, 5, 4, 3, 2].forEach(value => {
+                        const card = sortedCards.find(c => c.value === value);
+                        if (card) wheelCards.push(card);
+                    });
+                    return wheelCards;
+                }
+
+                return [];
+            }
+
+            findStraightFlush(sortedCards) {
+                const suitGroups = {};
+                sortedCards.forEach(card => {
+                    suitGroups[card.suit] = (suitGroups[card.suit] || []).concat(card);
+                });
+
+                // Check each suit for straight flush
+                for (const suit in suitGroups) {
+                    if (suitGroups[suit].length >= 5) {
+                        const straightInSuit = this.findStraightCards(suitGroups[suit]);
+                        if (straightInSuit.length >= 5) {
+                            return straightInSuit;
+                        }
+                    }
+                }
+
+                return [];
+            }
+
+            removeUsedCards(allCards, usedCards) {
+                const usedIds = new Set(usedCards.map(c => c.id));
+                return allCards.filter(c => !usedIds.has(c.id));
+            }
+
+            fallbackArrangement(cards) {
+                // This should never be called now, but keeping it safe
+                return {
+                    back: [],
+                    middle: [],
+                    front: [],
+                    cards: cards // Put all cards in staging
+                };
+            }
+
+            submitCurrentHand() {
+                const currentPlayer = this.players[this.currentPlayerIndex];
+                const playerData = this.playerHands.get(currentPlayer.name);
+
+                if (!playerData) {
+                    console.error('No player data found for:', currentPlayer.name);
+                    return;
+                }
+
+                console.log('Submit attempt by:', currentPlayer.name, 'at index:', this.currentPlayerIndex);
+
+                // Check if hand is properly arranged (5-5-3 distribution)
+                const totalPlaced = playerData.back.length + playerData.middle.length + playerData.front.length;
+                if (totalPlaced !== 13 || playerData.back.length !== 5 ||
+                    playerData.middle.length !== 5 || playerData.front.length !== 3) {
+                    alert('Please arrange all 13 cards: 5 in back, 5 in middle, 3 in front!');
+                    return;
+                }
+
+                // Evaluate hand strengths
+                const backStrength = this.evaluateHand(playerData.back);
+                const middleStrength = this.evaluateHand(playerData.middle);
+                const frontStrength = this.evaluateThreeCardHand(playerData.front);
+
+                // Check if hands are in proper order (Back >= Middle >= Front)
+                // Compare tuples lexicographically
+                const backTuple = backStrength.hand_rank;
+                const middleTuple = middleStrength.hand_rank;
+                const frontTuple = frontStrength.hand_rank;
+
+                const isValidOrder = this.compareTuples(backTuple, middleTuple) >= 0 &&
+                                   this.compareTuples(middleTuple, frontTuple) >= 0;
+
+                if (!isValidOrder) {
+                    const message = `INVALID HAND ORDER!\n\n` +
+                        `Back Hand: ${backStrength.name} (${backStrength.hand_rank.join(', ')})\n` +
+                        `Middle Hand: ${middleStrength.name} (${middleStrength.hand_rank.join(', ')})\n` +
+                        `Front Hand: ${frontStrength.name} (${frontStrength.hand_rank.join(', ')})\n\n` +
+                        `Rule: Back ≥ Middle ≥ Front\n` +
+                        `Format: (Hand Type, Key Cards...)\n\n` +
+                        `Would you like to reset your cards and try again?`;
+
+                    if (confirm(message)) {
+                        this.resetCards();
+                    }
+                    return;
+                }
+
+                // Store submitted hand
+                this.submittedHands.set(currentPlayer.name, {
+                    back: [...playerData.back],
+                    middle: [...playerData.middle],
+                    front: [...playerData.front]
+                });
+
+                currentPlayer.ready = true;
+                console.log('Player marked ready:', currentPlayer.name);
+
+                // Move to next player or end round
+                const oldIndex = this.currentPlayerIndex;
+                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+                console.log('Moving from player index', oldIndex, 'to', this.currentPlayerIndex);
+                console.log('Next player:', this.players[this.currentPlayerIndex].name);
+
+                // Check if all players are ready
+                const allReady = this.players.every(p => p.ready);
+                console.log('All players ready?', allReady);
+
+                if (allReady) {
+                    console.log('All players ready, calculating scores...');
+                    this.calculateScores();
+                    this.gameState = 'scoring';
+                } else {
+                    console.log('Loading next player hand...');
+                    this.loadCurrentPlayerHand();
+                }
+
+                this.updateDisplay();
+            }
+
+            calculateScores() {
+                const playerNames = this.players.map(p => p.name);
+                const roundScores = new Map();
+                const detailedResults = [];
+                const bonusPoints = new Map();
+
+                // Initialize round scores and bonus points
+                playerNames.forEach(name => {
+                    roundScores.set(name, 0);
+                    bonusPoints.set(name, 0);
+                });
+
+                // Calculate bonus points for each player
+                playerNames.forEach(playerName => {
+                    const hand = this.submittedHands.get(playerName);
+                    let playerBonus = 0;
+
+                    // Front hand bonuses
+                    const frontEval = this.evaluateThreeCardHand(hand.front);
+                    if (frontEval.hand_rank[0] === 4) { // Three of a kind
+                        playerBonus += 3;
+                    }
+
+                    // Middle hand bonuses
+                    const middleEval = this.evaluateHand(hand.middle);
+                    if (middleEval.hand_rank[0] === 7) { // Full house
+                        playerBonus += 2;
+                    } else if (middleEval.hand_rank[0] === 8) { // Four of a kind
+                        playerBonus += 8;
+                    } else if (middleEval.hand_rank[0] === 9) { // Straight flush
+                        playerBonus += 10;
+                    }
+
+                    // Back hand bonuses
+                    const backEval = this.evaluateHand(hand.back);
+                    if (backEval.hand_rank[0] === 8) { // Four of a kind
+                        playerBonus += 4;
+                    } else if (backEval.hand_rank[0] === 9) { // Straight flush
+                        playerBonus += 5;
+                    }
+
+                    bonusPoints.set(playerName, playerBonus);
+                    roundScores.set(playerName, playerBonus);
+                });
+
+                // Compare each player against every other player (head-to-head)
+                for (let i = 0; i < playerNames.length; i++) {
+                    for (let j = i + 1; j < playerNames.length; j++) {
+                        const player1 = playerNames[i];
+                        const player2 = playerNames[j];
+
+                        const hand1 = this.submittedHands.get(player1);
+                        const hand2 = this.submittedHands.get(player2);
+
+                        const result = this.compareHands(hand1, hand2);
+
+                        roundScores.set(player1, roundScores.get(player1) + result.player1Score);
+                        roundScores.set(player2, roundScores.get(player2) + result.player2Score);
+
+                        // Store detailed results for popup
+                        detailedResults.push({
+                            player1,
+                            player2,
+                            player1Score: result.player1Score,
+                            player2Score: result.player2Score,
+                            details: result.details,
+                            sweepBonus: result.sweepBonus
+                        });
+                    }
+                }
+
+                // Update total scores
+                roundScores.forEach((roundScore, playerName) => {
+                    this.scores.set(playerName, this.scores.get(playerName) + roundScore);
+                });
+
+                // Show scoring popup with bonus points
+                this.showScoringPopup(detailedResults, roundScores, bonusPoints);
+
+                this.updateDisplay();
+            }
+
+            compareTuples(tuple1, tuple2) {
+                // Compare two hand rank tuples lexicographically
+                // Returns: 1 if tuple1 > tuple2, -1 if tuple1 < tuple2, 0 if equal
+                const minLength = Math.min(tuple1.length, tuple2.length);
+
+                for (let i = 0; i < minLength; i++) {
+                    if (tuple1[i] > tuple2[i]) return 1;
+                    if (tuple1[i] < tuple2[i]) return -1;
+                }
+
+                // If all compared elements are equal, longer tuple is greater
+                if (tuple1.length > tuple2.length) return 1;
+                if (tuple1.length < tuple2.length) return -1;
+                return 0;
+            }
+
+            compareHands(hand1, hand2) {
+                let player1Score = 0;
+                let player2Score = 0;
+                const details = [];
+
+                // Compare back hands
+                const back1 = this.evaluateHand(hand1.back);
+                const back2 = this.evaluateHand(hand2.back);
+                const backComparison = this.compareTuples(back1.hand_rank, back2.hand_rank);
+                let backResult = 'tie';
+                if (backComparison > 0) {
+                    player1Score += 1;
+                    backResult = 'player1';
+                } else if (backComparison < 0) {
+                    player2Score += 1;
+                    backResult = 'player2';
+                }
+                details.push({
+                    hand: 'Back',
+                    player1Hand: back1,
+                    player2Hand: back2,
+                    winner: backResult
+                });
+
+                // Compare middle hands
+                const middle1 = this.evaluateHand(hand1.middle);
+                const middle2 = this.evaluateHand(hand2.middle);
+                const middleComparison = this.compareTuples(middle1.hand_rank, middle2.hand_rank);
+                let middleResult = 'tie';
+                if (middleComparison > 0) {
+                    player1Score += 1;
+                    middleResult = 'player1';
+                } else if (middleComparison < 0) {
+                    player2Score += 1;
+                    middleResult = 'player2';
+                }
+                details.push({
+                    hand: 'Middle',
+                    player1Hand: middle1,
+                    player2Hand: middle2,
+                    winner: middleResult
+                });
+
+                // Compare front hands
+                const front1 = this.evaluateThreeCardHand(hand1.front);
+                const front2 = this.evaluateThreeCardHand(hand2.front);
+                const frontComparison = this.compareTuples(front1.hand_rank, front2.hand_rank);
+                let frontResult = 'tie';
+                if (frontComparison > 0) {
+                    player1Score += 1;
+                    frontResult = 'player1';
+                } else if (frontComparison < 0) {
+                    player2Score += 1;
+                    frontResult = 'player2';
+                }
+                details.push({
+                    hand: 'Front',
+                    player1Hand: front1,
+                    player2Hand: front2,
+                    winner: frontResult
+                });
+
+                // Bonus for winning all three hands
+                let sweepBonus = '';
+                if (player1Score === 3) {
+                    player1Score += 3;
+                    sweepBonus = 'player1';
+                }
+                if (player2Score === 3) {
+                    player2Score += 3;
+                    sweepBonus = 'player2';
+                }
+
+                return { player1Score, player2Score, details, sweepBonus };
+            }
+
+            showScoringPopup(detailedResults, roundScores, bonusPoints) {
+                const popup = document.getElementById('scoringPopup');
+                const allPlayerHands = document.getElementById('allPlayerHands');
+                const roundRobinResults = document.getElementById('roundRobinResults');
+
+                // Display all players' hands
+                allPlayerHands.innerHTML = '';
+                this.players.forEach(player => {
+                    const hand = this.submittedHands.get(player.name);
+                    const bonus = bonusPoints.get(player.name);
+                    const headToHead = roundScores.get(player.name) - bonus;
+
+                    if (hand) {
+                        const playerDiv = document.createElement('div');
+                        playerDiv.className = 'player-hand-display';
+                        playerDiv.innerHTML = `
+                            <div class="player-hand-title">${player.name} - Round Score: +${roundScores.get(player.name)} points (Head-to-head: +${headToHead}, Bonus: +${bonus})</div>
+                            <div class="hand-row">
+                                <div class="hand-label-popup">Back:</div>
+                                <div class="hand-cards">${this.renderMiniCards(hand.back)}</div>
+                                <div class="hand-strength-popup">${this.getHandName(this.evaluateHand(hand.back))} (${this.evaluateHand(hand.back).hand_rank.join(', ')})${this.getBackBonus(this.evaluateHand(hand.back))}</div>
+                            </div>
+                            <div class="hand-row">
+                                <div class="hand-label-popup">Middle:</div>
+                                <div class="hand-cards">${this.renderMiniCards(hand.middle)}</div>
+                                <div class="hand-strength-popup">${this.getHandName(this.evaluateHand(hand.middle))} (${this.evaluateHand(hand.middle).hand_rank.join(', ')})${this.getMiddleBonus(this.evaluateHand(hand.middle))}</div>
+                            </div>
+                            <div class="hand-row">
+                                <div class="hand-label-popup">Front:</div>
+                                <div class="hand-cards">${this.renderMiniCards(hand.front)}</div>
+                                <div class="hand-strength-popup">${this.getThreeCardHandName(this.evaluateThreeCardHand(hand.front))} (${this.evaluateThreeCardHand(hand.front).hand_rank.join(', ')})${this.getFrontBonus(this.evaluateThreeCardHand(hand.front))}</div>
+                            </div>
+                        `;
+                        allPlayerHands.appendChild(playerDiv);
+                    }
+                });
+
+                // Display round-robin results
+                roundRobinResults.innerHTML = '';
+                detailedResults.forEach(result => {
+                    const matchupDiv = document.createElement('div');
+                    matchupDiv.className = 'matchup';
+
+                    let matchupHTML = `
+                        <div class="matchup-title">${result.player1} vs ${result.player2}</div>
+                    `;
+
+                    result.details.forEach(detail => {
+                        const p1Class = detail.winner === 'player1' ? 'winner' : detail.winner === 'tie' ? 'tie' : 'loser';
+                        const p2Class = detail.winner === 'player2' ? 'winner' : detail.winner === 'tie' ? 'tie' : 'loser';
+
+                        matchupHTML += `
+                            <div class="comparison-row">
+                                <div class="player-result ${p1Class}">
+                                    ${detail.player1Hand.name} (${detail.player1Hand.hand_rank.join(', ')})
+                                </div>
+                                <div style="color: #ffd700; font-weight: bold;">${detail.hand}</div>
+                                <div class="player-result ${p2Class}">
+                                    ${detail.player2Hand.name} (${detail.player2Hand.hand_rank.join(', ')})
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    const sweepText = result.sweepBonus ? ' (+3 Sweep Bonus!)' : '';
+                    matchupHTML += `
+                        <div class="comparison-row">
+                            <div class="player-result ${result.player1Score > result.player2Score ? 'winner' : result.player1Score < result.player2Score ? 'loser' : 'tie'}">
+                                ${result.player1}: ${result.player1Score} points
+                            </div>
+                            <div style="color: #ffd700; font-weight: bold;">HEAD-TO-HEAD</div>
+                            <div class="player-result ${result.player2Score > result.player1Score ? 'winner' : result.player2Score < result.player1Score ? 'loser' : 'tie'}">
+                                ${result.player2}: ${result.player2Score} points
+                            </div>
+                        </div>
+                        ${result.sweepBonus ? `<div style="text-align: center; color: #4ecdc4; font-weight: bold; margin-top: 10px;">🎉 ${result.sweepBonus === 'player1' ? result.player1 : result.player2} wins all hands +3 bonus!</div>` : ''}
+                    `;
+
+                    matchupDiv.innerHTML = matchupHTML;
+                    roundRobinResults.appendChild(matchupDiv);
+                });
+
+                popup.style.display = 'block';
+            }
+
+            getBackBonus(evaluation) {
+                if (evaluation.hand_rank[0] === 8) return ' (+4 bonus)';
+                if (evaluation.hand_rank[0] === 9) return ' (+5 bonus)';
+                return '';
+            }
+
+            getMiddleBonus(evaluation) {
+                if (evaluation.hand_rank[0] === 7) return ' (+2 bonus)';
+                if (evaluation.hand_rank[0] === 8) return ' (+8 bonus)';
+                if (evaluation.hand_rank[0] === 9) return ' (+10 bonus)';
+                return '';
+            }
+
+            getFrontBonus(evaluation) {
+                if (evaluation.hand_rank[0] === 4) return ' (+3 bonus)';
+                return '';
+            }
+
+            renderMiniCards(cards) {
+                return cards.map(card => {
+                    if (card.isWild) {
+                        return `<div class="card-mini wild">🃏</div>`;
+                    } else {
+                        const colorClass = ['♥', '♦'].includes(card.suit) ? 'red' : 'black';
+                        return `<div class="card-mini ${colorClass}"><div>${card.rank}</div><div>${card.suit}</div></div>`;
+                    }
+                }).join('');
+            }
+
+            closeScoringPopup() {
+                document.getElementById('scoringPopup').style.display = 'none';
+            }
+
+            updateDisplay() {
+                this.updateStatus();
+                this.updatePlayerList();
+                this.updateScoring();
+                this.updateButtonStates();
+            }
+
+            updateButtonStates() {
+                const newGameBtn = document.getElementById('newGame');
+                const addPlayerBtn = document.getElementById('addPlayer');
+                const resetBtn = document.getElementById('resetCards');
+                const autoBtn = document.getElementById('autoArrange');
+                const rankBtn = document.getElementById('sortByRank');
+                const suitBtn = document.getElementById('sortBySuit');
+                const submitBtn = document.getElementById('submitHand');
+
+                if (this.gameState === 'waiting') {
+                    // Only +Player is active at start
+                    addPlayerBtn.disabled = false;
+
+                    // New Game becomes active when 2+ players
+                    newGameBtn.disabled = this.players.length < 2;
+
+                    // Everything else is disabled
+                    resetBtn.disabled = true;
+                    autoBtn.disabled = true;
+                    rankBtn.disabled = true;
+                    suitBtn.disabled = true;
+                    submitBtn.disabled = true;
+
+                } else if (this.gameState === 'playing') {
+                    // During play, disable player management
+                    addPlayerBtn.disabled = true;
+                    newGameBtn.disabled = false;
+
+                    // Enable game controls
+                    resetBtn.disabled = false;
+                    autoBtn.disabled = false;
+                    rankBtn.disabled = false;
+                    suitBtn.disabled = false;
+
+                    // Submit button handled by existing validation logic
+
+                } else if (this.gameState === 'scoring') {
+                    // After scoring, allow new game and adding players
+                    addPlayerBtn.disabled = false;
+                    newGameBtn.disabled = false;
+
+                    // Disable game controls
+                    resetBtn.disabled = true;
+                    autoBtn.disabled = true;
+                    rankBtn.disabled = true;
+                    suitBtn.disabled = true;
+                    submitBtn.disabled = true;
+                }
+            }
+
+            updateStatus() {
+                const status = document.getElementById('status');
+
+                if (this.gameState === 'waiting') {
+                    status.textContent = `Players: ${this.players.length}/4 - Add players and click "New Game" to start!`;
+                } else if (this.gameState === 'playing') {
+                    const currentPlayer = this.players[this.currentPlayerIndex];
+                    const readyCount = this.players.filter(p => p.ready).length;
+                    status.textContent = `${currentPlayer.name}'s turn - Arrange your cards! (${readyCount}/${this.players.length} players ready)`;
+                } else if (this.gameState === 'scoring') {
+                    status.textContent = 'Round complete! Check the scores below.';
+                }
+            }
+
+            updatePlayerList() {
+                const playerList = document.getElementById('playerList');
+                playerList.innerHTML = '';
+
+                this.players.forEach((player, index) => {
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = 'player-item';
+
+                    if (this.gameState === 'playing' && index === this.currentPlayerIndex) {
+                        playerDiv.classList.add('current');
+                    }
+                    if (player.ready) {
+                        playerDiv.classList.add('ready');
+                    }
+
+                    const score = this.scores.get(player.name) || 0;
+                    playerDiv.innerHTML = `
+                        <span>${player.name}</span>
+                        <span>${player.ready ? '✓' : ''} ${score} pts</span>
+                    `;
+
+                    playerList.appendChild(playerDiv);
+                });
+            }
+
+            updateScoring() {
+                const scoring = document.getElementById('scoring');
+                const scoreList = document.getElementById('scoreList');
+
+                if (this.gameState === 'scoring' && this.scores.size > 0) {
+                    scoring.style.display = 'block';
+                    scoreList.innerHTML = '';
+
+                    const sortedScores = [...this.scores.entries()].sort((a, b) => b[1] - a[1]);
+
+                    sortedScores.forEach(([playerName, score]) => {
+                        const scoreDiv = document.createElement('div');
+                        scoreDiv.className = 'score-item';
+                        scoreDiv.innerHTML = `
+                            <span>${playerName}</span>
+                            <span>${score} points</span>
+                        `;
+                        scoreList.appendChild(scoreDiv);
+                    });
+                } else {
+                    scoring.style.display = 'none';
+                }
+            }
+        }
+
+        // Initialize the game when the page loads
+        let game;
+        document.addEventListener('DOMContentLoaded', () => {
+            game = new ChinesePokerGame();
+        });
+    </script>
+</body>
+</html>
